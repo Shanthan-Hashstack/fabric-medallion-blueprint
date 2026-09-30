@@ -1,0 +1,35 @@
+lakehouse: SalesLakehouse
+
+domains:
+  - name: sales
+    tables:
+      - name: customer
+        layers: [bronze, silver]
+        business_keys: [customer_id]
+        columns:
+          - {name: customer_id, type: bigint, nullable: false}
+          - {name: full_name,   type: string}
+          - {name: email,       type: string}
+          - {name: country,     type: string}
+        partition_by: [country]
+
+      - name: order
+        layers: [bronze, silver, gold]
+        business_keys: [order_id]
+        columns:
+          - {name: order_id,    type: bigint, nullable: false}
+          - {name: customer_id, type: bigint}
+          - {name: order_date,  type: date}
+          - {name: amount,      type: "decimal(18,2)"}
+          - {name: status,      type: string}
+        partition_by: [order_date]
+
+      - name: product
+        layers: [bronze, silver, gold]
+        business_keys: [product_id]
+        columns:
+          - {name: product_id, type: int, nullable: false}
+          - {name: product_name, type: string}
+          - {name: category, type: string}
+          - {name: unit_price, type: "decimal(18,2)"}
+        partition_by: [category]

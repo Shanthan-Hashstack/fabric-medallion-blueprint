@@ -1,0 +1,65 @@
+# The single source of truth for how a Fabric lakehouse is laid out.
+zones:
+  landing:
+    order: 0
+    kind: files
+    path: "Files/landing/{domain}/{source}/"
+    format: as_received
+    description: Immutable raw source files exactly as received.
+  bronze:
+    order: 1
+    kind: table
+    table_prefix: bronze_
+    format: delta
+    description: Raw data landed as Delta, schema enforced, history preserved.
+  silver:
+    order: 2
+    kind: table
+    table_prefix: silver_
+    format: delta
+    description: Cleansed, de-duplicated, conformed business entities.
+  gold:
+    order: 3
+    kind: table
+    table_prefix: gold_
+    format: delta
+    description: Aggregated, business-ready marts for reporting.
+
+naming:
+  pattern: "^[a-z][a-z0-9_]*$"
+  max_length: 100
+  schema_per_zone: true
+
+audit_columns:
+  bronze:
+    - {name: _ingested_at,   type: timestamp}
+    - {name: _source_system, type: string}
+    - {name: _batch_id,      type: string}
+  silver:
+    - {name: _updated_at,    type: timestamp}
+  gold:
+    - {name: _built_at,      type: timestamp}
+
+partitioning:
+  require_for_large_tables: true
+  preferred_columns: [event_date, order_date, load_date, country]
+  max_partition_columns: 2
+
+table_properties:
+  "delta.autoOptimize.optimizeWrite": "true"
+  "delta.autoOptimize.autoCompact": "true"
+  "delta.minReaderVersion": "2"
+  "delta.minWriterVersion": "5"
+
+allowed_types:
+  - string
+  - int
+  - bigint
+  - smallint
+  - double
+  - float
+  - decimal
+  - boolean
+  - date
+  - timestamp
+  - binary
